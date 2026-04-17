@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader - Premium</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <div class="toggle-container">
+            <span class="toggle-label">Unduh ke HP</span>
+            <label class="switch">
+                <input type="checkbox" id="modeToggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="glass-card">
+            <h1>YT Downloader</h1>
+            <p class="subtitle">Unduh video kualitas tinggi dalam sekejap</p>
+            
+            <div class="input-group">
+                <label for="urlInput">Link Video YouTube</label>
+                <input type="text" id="urlInput" placeholder="https://youtube.com/watch?v=...">
+            </div>
+
+            <div class="input-group">
+                <label for="pathInput">Lokasi Penyimpanan (Laptop)</label>
+                <input type="text" id="pathInput" placeholder="C:\Downloads">
+            </div>
+
+            <button id="downloadBtn" class="neon-btn">Download Now</button>
+
+            <div class="progress-container">
+                <div class="progress-bar-bg">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+                <span id="progressText">0%</span>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
