@@ -6,6 +6,9 @@ const downloadBtn = document.getElementById('downloadBtn');
 const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
 
+// Initialize Socket.io
+const socket = io();
+
 // Toggle logic (Mobile vs Laptop)
 modeToggle.addEventListener('change', () => {
     if (modeToggle.checked) {
@@ -20,8 +23,8 @@ modeToggle.addEventListener('change', () => {
     }
 });
 
-// Download button logic (Fase 2: Mockup only)
-downloadBtn.addEventListener('click', () => {
+// Download button logic
+downloadBtn.addEventListener('click', async () => {
     const url = urlInput.value;
     const path = pathInput.value;
     const isMobileMode = modeToggle.checked;
@@ -31,38 +34,56 @@ downloadBtn.addEventListener('click', () => {
         return;
     }
 
-    console.log("--- DOWNLOAD REQUEST (Mockup) ---");
-    console.log("URL:", url);
-    console.log("Mode:", isMobileMode ? "HP (Mobile)" : "Laptop (Desktop)");
-    console.log("Path:", isMobileMode ? "Internal Storage" : path);
-    console.log("---------------------------------");
+    if (!isMobileMode && !path) {
+        alert("Silakan masukkan Path penyimpanan untuk Laptop!");
+        return;
+    }
 
-    // Simulating progress bar for UI demo
-    simulateDownload();
-});
-
-// Utility to simulate progress
-function simulateDownload() {
-    let progress = 0;
     downloadBtn.disabled = true;
     downloadBtn.innerText = "Processing...";
+    updateProgress(0);
 
-    const interval = setInterval(() => {
-        progress += Math.floor(Math.random() * 10) + 5;
-        if (progress >= 100) {
-            progress = 100;
-            clearInterval(interval);
+    if (isMobileMode) {
+        // --- MOBILE MODE (Stream) ---
+        // Redirecting to the GET endpoint will trigger a browser download
+        window.location.href = `/download/mobile?url=${encodeURIComponent(url)}`;
+        
+        // Reset button after a delay (since we can't track stream progress easily via redirect)
+        setTimeout(() => {
             downloadBtn.disabled = false;
             downloadBtn.innerText = "Download Now";
-            setTimeout(() => {
-                alert("Simulasi Selesai! (Fase 3 akan menyambungkan ke Server)");
-                progress = 0;
-                updateProgress(0);
-            }, 500);
+        }, 5000);
+
+    } else {
+        // --- LAPTOP MODE (Server-side Save) ---
+        try {
+            const response = await fetch('/download/laptop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, path })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Download Berhasil: " + result.message);
+            } else {
+                alert("Error: " + result.error);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan teknis.");
+        } finally {
+            downloadBtn.disabled = false;
+            downloadBtn.innerText = "Download Now";
         }
-        updateProgress(progress);
-    }, 400);
-}
+    }
+});
+
+// Listen for progress from server (Laptop Mode)
+socket.on('progress-laptop', (data) => {
+    updateProgress(data.percent);
+});
 
 function updateProgress(percent) {
     progressBar.style.width = percent + '%';
