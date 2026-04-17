@@ -13,21 +13,35 @@ Aplikasi web ini memungkinkan pengguna mendownload video YouTube dengan 2 mode e
    - *Opsional*: `socket.io` (untuk mengirim status progress bar download dari backend ke frontend secara *real-time*).
 
 ## Fase 2: Membangun Struktur Frontend (UI/UX)
-Semua file web (HTML, CSS, JS) akan diletakkan di dalam folder `public`.
-1. **Elemen Antarmuka (`index.html`)**:
-   - Tombol "Toggle Switch" ON/OFF di ujung kiri atas untuk mengganti mode (Mobile vs Laptop).
-   - Form input **URL YouTube**.
-   - Form input **Path Direktori** (Misal: `C:\Users\Downloads\video.mp4`).
-   - Tombol **Download** yang responsif.
-   - **Progress Bar** dengan format persentase % download.
-2. **Styling Premium (`style.css`)**:
-   - Gunakan skema warna *Dark Mode* dengan gradasi neon.
-   - Tambahkan animasi dan transisi agar UI terasa kekinian dan mahal (*glassmorphism*).
-3. **Interaksi Logic (`script.js`)**:
-   - Deteksi *event* klik pada Toggle Switch ON/OFF.
-   - Jika Toggle di-set ke **ON (Mobile)**: Input Path menjadi `disabled`/`read-only` dan bernilai default "Download ke Perangkat Ini".
-   - Jika Toggle di-set ke **OFF (Laptop)**: Input Path dapat disesuaikan manual.
-   - Kirim `request` (AJAX/Fetch) ke Backend menggunakan parameter url, mode, dan lokasi path. Menangani pembaruan progress bar.
+**Tujuan Dasar**: Membuat struktur User Interface (UI) web statis yang menarik untuk dilihat, responsif, dan fungsional di bagian antarmuka sebelum disambung ke server Backend sesungguhnya. **Lokasi pengerjaan:** di dalam folder root, buat direktori bernama `public` untuk tempat bekerja.
+
+**1. Persiapkan File dan Folder**
+- Buat folder baru dengan nama `public` di root direktori project.
+- Di dalam folder `public`, buat tiga (3) file kosong: `index.html`, `style.css`, dan `script.js`.
+
+**2. Struktur HTML5 (`public/index.html`)**
+- Buat template kerangka dasar HTML5. Hubungkan tag `<head>` dengan file `style.css` menggunakan tag `<link>` dan di atas tag penutup `</body>` panggil logika antarmuka dari `script.js` menggunakan tag `<script>`.
+- Buat area *Navbar / Header* di bagian paling atas: masukkan *Toggle Switch* checkbox beserta Label (contoh Label: "Unduh ke HP"). Pastikan ditempatkan posisinya di **KIRI ATAS**.
+- Buat sebuah `<main>` kontainer atau `<form>` (tempatkan secara vertikal & horizontal agar berada di tengah layar):
+  - Buat **Input URL (tipe Text)**. Beri ID (contoh: `id="urlInput"`) untuk menampung link URL Youtube.
+  - Buat **Input Path (tipe Text)**. Beri ID (contoh: `id="pathInput"`) untuk menampung format direktori misal (`C:\Downloads`).
+  - Buat **Tombol Download**. Beri ID (contoh: `id="downloadBtn"`).
+- Bagian Indikator Progress: Di bawah tombol download, buat container `div` untuk Progress Bar. Isinya tag kosong dengan ID `id="progressBar"` (yang mana lebarnya akan bertambah), dan label teks untuk persentase `id="progressText"` (Mulai dari format `0%`).
+
+**3. Desain CSS Premium (`public/style.css`)**
+- Berikan gaya **Dark Mode** secara utuh. Buat background `body` berwarna abu-abu sangat gelap (hitam doff / `#121212`). Gunakan gaya font *sans-serif* yang rapi (seperti dari Google Fonts: *Inter*).
+- Gunakan metode pewarnaan Neon pada *Tombol Download* saat *hover*. Beri bayangan *(drop-shadow/glow)* warna biru terang atau ungu agar tampil *stand-out*.
+- Gunakan efek lekuk-lekuk / desain kotak modern pada form input dengan menggunakan `border-radius: 8px` / `12px`.
+- Koding khusus bagian **Toggle Switch di pojok kiri**. Ubah elemen `<input type="checkbox">` dasar bawaan HTML supaya di-stylize menjadi desain *Toggle Switch Slider* horizontal yang berbentuk panjang-membulat (pil) dan dapat bergeser *smooth* ketika diklik.
+- Desain *Progress Bar* sebagai persegi panjang dengan background pudar dan warna progress hijau terang. Atur lebarnya menjadi 0% lewat CSS awal menggunakan efek `transition: width 0.3s ease;` supaya animasinya terlihat lembut dan tidak kaku ketika ukurannya bertambah.
+
+**4. Interaksi JavaScript Murni (`public/script.js`)**
+(Fokus di Fase 2 ini hanya pada logika perilaku elemen UI form, *mockup* data, dan pembacaan *event*. Jangan mendesain kode request ke server backend asli (Abaikan Fetch) dulu).
+- Deklarasikan konstanta variabel untuk menyeleksi dan memanggil semua elemen (*DOM Selectors*) menggunakan fungsi `document.getElementById()`. Ambil Toggle, Input URL, Input Path, dan Tombol Download.
+- **Logika Toggle (Mode Perangkat)**: Buat `eventListener` ('change') yang senantiasa memonitor reaksi elemen Toggle Switch.
+  - *Jika checkbox dicentang* (`checked === true` artinya Mode HP aktif): Set property input form menjadi `pathInput.disabled = true;`. Ubah juga isi placeholder atau `value`-nya ke "Disediakan di Memori HP" sehingga pengguna tahu bahwa di HP, form untuk path file tidak perlu diisi dan akan terkunci (*Read-Only*).
+  - *Jika checkbox tak dicentang* (`checked === false` artinya Mode Laptop aktif): Kembalikan kondisi logikanya senormalnya: `pathInput.disabled = false;` lalu bersihkan/osongkan field isinya supaya user bisa mengetik path sendiri lagi.
+- **Logika Tombol Download**: Pada *event onClick* ('click'), cukup tangkap `value` URL dalam *string* dan tangkap status value dari Mode Toggle (dicentang atau tidak). Cetak hal ini dan tampilkan statusnya menggunakan `console.log()` untuk memverifikasi fungsional jika nilainya terbaca dengan lancar. (Proses mengirim nilainya ke backend secara aslinya, baru akan kita kerjakan di bagian Fase 3 mendatang).
 
 ## Fase 3: Logika Backend dan Routing (`server.js`)
 1. **Server Express**:
