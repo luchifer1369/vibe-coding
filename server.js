@@ -1,7 +1,7 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const ytdl = require('@distube/ytdl-core');
+const play = require('play-dl');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
@@ -23,28 +23,32 @@ app.post('/download/laptop', async (req, res) => {
     }
 
     try {
-        const info = await ytdl.getInfo(url);
-        const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
+        const info = await play.video_info(url);
+        const title = info.video_details.title.replace(/[^\w\s]/gi, '');
         const fullPath = path.join(targetPath, `${title}.mp4`);
 
-        // Ensure directory exists (simplified for this demo)
-        const stream = ytdl(url, { quality: 'highestvideo', filter: 'audioandvideo' });
-        
-        stream.on('progress', (chunkLength, downloaded, total) => {
+        const streamData = await play.stream(url);
+        const stream = streamData.stream;
+        const total = streamData.content_length;
+        let downloaded = 0;
+
+        stream.on('data', (chunk) => {
+            downloaded += chunk.length;
             const percent = (downloaded / total) * 100;
             io.emit('progress-laptop', { percent: percent.toFixed(2) });
         });
 
-        stream.pipe(fs.createWriteStream(fullPath));
+        const writestream = fs.createWriteStream(fullPath);
+        stream.pipe(writestream);
 
-        stream.on('end', () => {
+        writestream.on('finish', () => {
             console.log(`Finished downloading: ${fullPath}`);
             res.json({ success: true, message: `File saved to ${fullPath}` });
         });
 
-        stream.on('error', (err) => {
+        writestream.on('error', (err) => {
             console.error(err);
-            res.status(500).json({ error: "Failed to download" });
+            res.status(500).json({ error: "Failed to download to target path" });
         });
 
     } catch (err) {
@@ -62,12 +66,13 @@ app.get('/download/mobile', async (req, res) => {
     }
 
     try {
-        const info = await ytdl.getInfo(url);
-        const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
+        const info = await play.video_info(url);
+        const title = info.video_details.title.replace(/[^\w\s]/gi, '');
+        
+        const streamData = await play.stream(url);
         
         res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
-        
-        ytdl(url, { quality: 'highestvideo', filter: 'audioandvideo' }).pipe(res);
+        streamData.stream.pipe(res);
 
     } catch (err) {
         console.error(err);
@@ -78,5 +83,4 @@ app.get('/download/mobile', async (req, res) => {
 const PORT = 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-    console.log(`Access from mobile using your IP address (e.g., http://192.168.x.x:${PORT})`);
 });
